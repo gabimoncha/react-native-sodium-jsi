@@ -29,7 +29,7 @@ static std::vector<uint8_t> hexToBin(jsi::Runtime &runtime, const std::string &s
     ret.resize(str.size());
     size_t decoded_len = 0;
     if (str.size() % 2 || sodium_hex2bin(ret.data(), ret.size(), str.data(), str.size(), nullptr, &decoded_len, nullptr) != 0)
-        jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] invalid hex input");
+        jsi::JSError(runtime, "[react-native-sodium-jsi] invalid hex input");
     ret.resize(decoded_len);
     return ret;
 }
@@ -54,7 +54,7 @@ static std::vector<uint8_t> base64ToBin(jsi::Runtime &runtime, const std::string
     size_t decoded_len = 0;
     if (sodium_base642bin(ret.data(), ret.size(), str.data(), str.size(), nullptr, &decoded_len, nullptr, sodium_base64_VARIANT_ORIGINAL) != 0)
     {
-        jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] invalid base64 input");
+        jsi::JSError(runtime, "[react-native-sodium-jsi] invalid base64 input");
     }
     ret.resize(decoded_len);
     return ret;
@@ -69,14 +69,14 @@ static jsi::ArrayBuffer asArrayBuffer(jsi::Runtime &runtime, const jsi::Value &v
 {
     jsi::Object obj = val.asObject(runtime);
     if (!obj.isArrayBuffer(runtime))
-        jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] expected ArrayBuffer");
+        jsi::JSError(runtime, "[react-native-sodium-jsi] expected ArrayBuffer");
     return obj.getArrayBuffer(runtime);
 }
 static uint8_t *extractArrayBuffer(jsi::Runtime &runtime, const jsi::Value &val, size_t size)
 {
     jsi::ArrayBuffer buf = asArrayBuffer(runtime, val);
     if (buf.size(runtime) != size)
-        jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] unexpected ArrayBuffer size");
+        jsi::JSError(runtime, "[react-native-sodium-jsi] unexpected ArrayBuffer size");
     return buf.data(runtime);
 }
 template <typename T>
@@ -91,7 +91,7 @@ void install(jsi::Runtime &jsiRuntime)
               << "\n";
 
     if (sodium_init() == -1)
-        jsi::detail::throwJSError(jsiRuntime, "[react-native-sodium-jsi] sodium_init() failed");
+        jsi::JSError(jsiRuntime, "[react-native-sodium-jsi] sodium_init() failed");
 
     auto jsi_crypto_aead_xchacha20poly1305_ietf_keygen = jsi::Function::createFromHostFunction(
         jsiRuntime,
@@ -126,7 +126,7 @@ void install(jsi::Runtime &jsiRuntime)
         {
             if (arguments[0].isNull())
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] size cannot be null in randombytes_buf");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] size cannot be null in randombytes_buf");
                 return {};
             }
             size_t size = arguments[0].asNumber();
@@ -144,7 +144,7 @@ void install(jsi::Runtime &jsiRuntime)
         {
             if (arguments[0].isNull() || arguments[1].isNull() || arguments[2].isNull())
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] jsi_crypto_aead_xchacha20poly1305_ietf_encrypt arguments are null");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] jsi_crypto_aead_xchacha20poly1305_ietf_encrypt arguments are null");
             }
 
             std::string message = arguments[0].asString(runtime).utf8(runtime);
@@ -157,11 +157,11 @@ void install(jsi::Runtime &jsiRuntime)
 
             if (npub.size() != crypto_aead_xchacha20poly1305_ietf_NPUBBYTES)
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_aead_xchacha20poly1305_ietf_encrypt wrong nonce length");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_aead_xchacha20poly1305_ietf_encrypt wrong nonce length");
             }
             if (k.size() != crypto_aead_xchacha20poly1305_IETF_KEYBYTES)
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_aead_xchacha20poly1305_ietf_encrypt wrong key length");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_aead_xchacha20poly1305_ietf_encrypt wrong key length");
             }
 
             std::vector<uint8_t> c;
@@ -188,7 +188,7 @@ void install(jsi::Runtime &jsiRuntime)
         {
             if (arguments[0].isNull() || arguments[1].isNull() || arguments[2].isNull())
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_aead_xchacha20poly1305_ietf_decrypt arguments are null");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_aead_xchacha20poly1305_ietf_decrypt arguments are null");
                 return {};
             }
 
@@ -203,11 +203,11 @@ void install(jsi::Runtime &jsiRuntime)
 
             if (npub.size() != crypto_aead_xchacha20poly1305_ietf_NPUBBYTES)
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_aead_xchacha20poly1305_ietf_decrypt wrong nonce length");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_aead_xchacha20poly1305_ietf_decrypt wrong nonce length");
             }
             if (k.size() != crypto_aead_xchacha20poly1305_IETF_KEYBYTES)
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_aead_xchacha20poly1305_ietf_decrypt wrong key length");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_aead_xchacha20poly1305_ietf_decrypt wrong key length");
             }
 
             unsigned long long m_len = c.size();
@@ -234,7 +234,7 @@ void install(jsi::Runtime &jsiRuntime)
         {
             if (arguments[0].isNull() || arguments[1].isNull() || arguments[2].isNull() || arguments[3].isNull() || arguments[4].isNull())
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] jsi_crypto_pwhash arguments are null");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] jsi_crypto_pwhash arguments are null");
             }
 
             unsigned long long length = arguments[0].asNumber();
@@ -245,11 +245,11 @@ void install(jsi::Runtime &jsiRuntime)
 
             if (length < crypto_pwhash_argon2id_BYTES_MIN || length > crypto_pwhash_argon2id_BYTES_MAX)
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_pwhash wrong output length");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_pwhash wrong output length");
             }
             if (salt.size() != crypto_pwhash_argon2id_SALTBYTES)
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_pwhash wrong salt length");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_pwhash wrong salt length");
             }
 
             std::vector<uint8_t> ret;
@@ -276,13 +276,13 @@ void install(jsi::Runtime &jsiRuntime)
         {
             if (arguments[0].isNull())
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_init_push arguments are null");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_init_push arguments are null");
             }
 
             std::vector<uint8_t> k = hexToBin(runtime, arguments[0].asString(runtime).utf8(runtime));
             if (k.size() != crypto_secretstream_xchacha20poly1305_keybytes())
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_init_push wrong key length");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_init_push wrong key length");
             }
 
             jsi::Value arraybuf = createArrayBuffer(runtime, sizeof(crypto_secretstream_xchacha20poly1305_state));
@@ -314,7 +314,7 @@ void install(jsi::Runtime &jsiRuntime)
         {
             if (arguments[0].isNull())
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_push arguments are null");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_push arguments are null");
             }
 
             auto *st = extractArrayBuffer<crypto_secretstream_xchacha20poly1305_state>(runtime, arguments[0]);
@@ -347,19 +347,19 @@ void install(jsi::Runtime &jsiRuntime)
         {
             if (arguments[0].isNull())
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_init_pull arguments are null");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_init_pull arguments are null");
             }
 
             std::vector<uint8_t> header = base64ToBin(runtime, arguments[1].asString(runtime).utf8(runtime));
             if (header.size() != crypto_secretstream_xchacha20poly1305_HEADERBYTES)
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_init_pull wrong header length");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_init_pull wrong header length");
             }
 
             std::vector<uint8_t> key = hexToBin(runtime, arguments[0].asString(runtime).utf8(runtime));
             if (key.size() != crypto_secretstream_xchacha20poly1305_keybytes())
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_init_push wrong key length");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_init_push wrong key length");
             }
 
             jsi::Value arraybuf = createArrayBuffer(runtime, sizeof(crypto_secretstream_xchacha20poly1305_state));
@@ -386,7 +386,7 @@ void install(jsi::Runtime &jsiRuntime)
         {
             if (arguments[0].isNull())
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_pull arguments are null");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_pull arguments are null");
             }
 
             auto *st = extractArrayBuffer<crypto_secretstream_xchacha20poly1305_state>(runtime, arguments[0]);
@@ -394,7 +394,7 @@ void install(jsi::Runtime &jsiRuntime)
             std::string assoc_data = arguments[2].asString(runtime).utf8(runtime);
 
             if (ciphertext.size(runtime) < crypto_secretstream_xchacha20poly1305_ABYTES)
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_pull too short ciphertext");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] crypto_secretstream_xchacha20poly1305_pull too short ciphertext");
             size_t ret_size = ciphertext.size(runtime) - crypto_secretstream_xchacha20poly1305_ABYTES;
             jsi::Value ret = createArrayBuffer(runtime, ret_size);
             uint8_t *ret_ptr = extractArrayBuffer(runtime, ret, ret_size);
@@ -424,7 +424,7 @@ void install(jsi::Runtime &jsiRuntime)
         {
             if (arguments[0].isNull())
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] string cannot be null in to_base64");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] string cannot be null in to_base64");
                 return {};
             }
 
@@ -442,7 +442,7 @@ void install(jsi::Runtime &jsiRuntime)
         {
             if (arguments[0].isNull())
             {
-                jsi::detail::throwJSError(runtime, "[react-native-sodium-jsi] string cannot be null in from_base64");
+                jsi::JSError(runtime, "[react-native-sodium-jsi] string cannot be null in from_base64");
                 return {};
             }
 
